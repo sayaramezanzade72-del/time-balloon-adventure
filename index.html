@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Balloon Pop</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  overflow:hidden;
+  min-height:100vh;
+  background:linear-gradient(180deg,#7ddcff,#dff8ff);
+}
+
+/* ---------- START SCREEN ---------- */
+
+#startScreen{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#70d6ff,#b8f2e6);
+}
+
+.startBox{
+  width:90%;
+  max-width:430px;
+  background:white;
+  border-radius:30px;
+  padding:35px 25px;
+  text-align:center;
+  box-shadow:0 15px 40px rgba(0,0,0,.2);
+}
+
+.logo{
+  font-size:65px;
+  margin-bottom:10px;
+}
+
+.startBox h1{
+  color:#ff5c8a;
+  font-size:34px;
+  margin-bottom:8px;
+}
+
+.subtitle{
+  color:#555;
+  margin-bottom:25px;
+}
+
+input{
+  width:100%;
+  padding:15px;
+  border:3px solid #8ee3f5;
+  border-radius:15px;
+  font-size:18px;
+  text-align:center;
+  outline:none;
+  margin-bottom:15px;
+}
+
+button{
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  transition:.2s;
+}
+
+.startBtn{
+  width:100%;
+  padding:16px;
+  border-radius:18px;
+  background:#ff5c8a;
+  color:white;
+  font-size:20px;
+  box-shadow:0 6px 0 #d83d68;
+}
+
+.startBtn:active{
+  transform:translateY(5px);
+  box-shadow:0 1px 0 #d83d68;
+}
+
+.teacher{
+  margin-top:20px;
+  color:#777;
+  font-size:14px;
+}
+
+/* ---------- GAME ---------- */
+
+#game{
+  display:none;
+  min-height:100vh;
+  position:relative;
+}
+
+.topBar{
+  position:absolute;
+  top:10px;
+  left:10px;
+  right:10px;
+  z-index:20;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+}
+
+.info{
+  background:rgba(255,255,255,.9);
+  padding:8px 13px;
+  border-radius:15px;
+  font-weight:bold;
+  font-size:15px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
+}
+
+#questionBox{
+  position:absolute;
+  top:70px;
+  left:50%;
+  transform:translateX(-50%);
+  width:94%;
+  max-width:650px;
+  background:white;
+  border-radius:22px;
+  padding:15px;
+  text-align:center;
+  z-index:20;
+  box-shadow:0 6px 20px rgba(0,0,0,.15);
+}
+
+#questionLabel{
+  font-size:14px;
+  color:#777;
+  margin-bottom:5px;
+}
+
+#question{
+  font-size:24px;
+  color:#333;
+  font-weight:bold;
+}
+
+#balloonArea{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+}
+
+/* ---------- BALLOONS ---------- */
+
+.balloon{
+  position:absolute;
+  width:105px;
+  height:125px;
+  border-radius:50% 50% 48% 48%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+  animation:floatUp linear forwards;
+  box-shadow:
+    inset -12px -15px 20px rgba(0,0,0,.12),
+    inset 10px 10px 15px rgba(255,255,255,.35),
+    0 8px 12px rgba(0,0,0,.12);
+  z-index:10;
+}
+
+.balloon::after{
+  content:"";
+  position:absolute;
+  bottom:-8px;
+  width:0;
+  height:0;
+  border-left:7px solid transparent;
+  border-right:7px solid transparent;
+  border-top:12px solid currentColor;
+}
+
+.balloon::before{
+  content:"";
+  position:absolute;
+  bottom:-80px;
+  left:50%;
+  width:2px;
+  height:75px;
+  background:#777;
+}
+
+.clock{
+  width:76px;
+  height:76px;
+  background:white;
+  border:5px solid #333;
+  border-radius:50%;
+  position:relative;
+}
+
+.clock .num{
+  position:absolute;
+  font-size:10px;
+  font-weight:bold;
+  color:#222;
+}
+
+.n12{top:2px;left:50%;transform:translateX(-50%)}
+.n3{right:4px;top:50%;transform:translateY(-50%)}
+.n6{bottom:2px;left:50%;transform:translateX(-50%)}
+.n9{left:4px;top:50%;transform:translateY(-50%)}
+
+.hand{
+  position:absolute;
+  left:50%;
+  bottom:50%;
+  transform-origin:bottom center;
+  background:#222;
+  border-radius:5px;
+}
+
+.hourHand{
+  width:4px;
+  height:20px;
+}
+
+.minuteHand{
+  width:3px;
+  height:28px;
+}
+
+.centerDot{
+  position:absolute;
+  width:7px;
+  height:7px;
+  background:#ff4d6d;
+  border-radius:50%;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+
+@keyframes floatUp{
+  from{
+    transform:translateY(110vh) rotate(-5deg);
+  }
+  to{
+    transform:translateY(-180px) rotate(5deg);
+  }
+}
+
+/* ---------- EFFECTS ---------- */
+
+.pop{
+  animation:pop .25s forwards !important;
+}
+
+@keyframes pop{
+  to{
+    transform:scale(1.5);
+    opacity:0;
+  }
+}
+
+.correctFlash{
+  position:fixed;
+  inset:0;
+  background:rgba(65,220,120,.18);
+  z-index:50;
+  pointer-events:none;
+  animation:flash .35s;
+}
+
+.wrongFlash{
+  position:fixed;
+  inset:0;
+  background:rgba(255,50,70,.18);
+  z-index:50;
+  pointer-events:none;
+  animation:flash .35s;
+}
+
+@keyframes flash{
+  from{opacity:1}
+  to{opacity:0}
+}
+
+/* ---------- END SCREEN ---------- */
+
+#endScreen{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:200;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#7ddcff,#ffd6ec);
+}
+
+.endBox{
+  background:white;
+  width:90%;
+  max-width:450px;
+  border-radius:30px;
+  padding:35px 25px;
+  text-align:center;
+  box-shadow:0 15px 40px rgba(0,0,0,.2);
+}
+
+#endEmoji{
+  font-size:70px;
+}
+
+#endTitle{
+  font-size:36px;
+  color:#ff5c8a;
+  margin:10px 0;
+}
+
+#endMessage{
+  font-size:20px;
+  margin-bottom:15px;
+}
+
+.finalScore{
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:25px;
+}
+
+.playAgain{
+  background:#4ecdc4;
+  color:white;
+  padding:15px 30px;
+  border-radius:15px;
+  font-size:18px;
+}
+
+/* ---------- MOBILE ---------- */
+
+@media(max-width:500px){
+
+  .info{
+    font-size:13px;
+    padding:7px 9px;
+  }
+
+  #questionBox{
+    top:62px;
+    padding:12px;
+  }
+
+  #question{
+    font-size:20px;
+  }
+
+  .balloon{
+    width:90px;
+    height:108px;
+  }
+
+  .clock{
+    width:68px;
+    height:68px;
+  }
+
+  .hourHand{
+    height:18px;
+  }
+
+  .minuteHand{
+    height:25px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- START SCREEN -->
+
+<div id="startScreen">
+
+  <div class="startBox">
+
+    <div class="logo">🎈⏰</div>
+
+    <h1>Time Balloon Pop</h1>
+
+    <div class="subtitle">
+      Pop the correct clock!
+    </div>
+
+    <input
+      id="playerName"
+      type="text"
+      placeholder="Enter your name"
+      maxlength="20"
+    >
+
+    <button class="startBtn" onclick="startGame()">
+      🚀 START GAME
+    </button>
+
+    <div class="teacher">
+      Teacher: <b>Ms. Ramezanzade</b>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- GAME -->
+
+<div id="game">
+
+  <div class="topBar">
+
+    <div class="info">
+      ❤️ <span id="lives">5</span>
+    </div>
+
+    <div class="info">
+      ⭐ <span id="score">0</span>
+    </div>
+
+    <div class="info">
+      ⏱️ <span id="timer">30</span>
+    </div>
+
+  </div>
+
+
+  <div id="questionBox">
+
+    <div id="questionLabel">
+      🎯 Find the correct time
+    </div>
+
+    <div id="question">
+      Find: quarter past three
+    </div>
+
+  </div>
+
+
+  <div id="balloonArea"></div>
+
+</div>
+
+
+<!-- END SCREEN -->
+
+<div id="endScreen">
+
+  <div class="endBox">
+
+    <div id="endEmoji">🏆</div>
+
+    <div id="endTitle">
+      TIME CHAMPION!
+    </div>
+
+    <div id="endMessage">
+      Great job!
+    </div>
+
+    <div class="finalScore">
+      Score: <span id="finalScore">0</span>
+    </div>
+
+    <button class="playAgain" onclick="location.reload()">
+      🔄 Play Again
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   AUDIO SYSTEM
+===================================================== */
+
+let audioCtx;
+let musicInterval;
+
+function initAudio(){
+
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+}
+
+
+function tone(freq,duration,type="sine",volume=.08){
+
+  if(!audioCtx) return;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  gain.gain.setValueAtTime(volume,audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    .001,
+    audioCtx.currentTime + duration
+  );
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+
+/* Correct sound */
+
+function correctSound(){
+
+  tone(523,.12);
+  setTimeout(()=>tone(659,.12),100);
+  setTimeout(()=>tone(784,.2),200);
+
+}
+
+
+/* Wrong sound */
+
+function wrongSound(){
+
+  tone(180,.25,"sawtooth",.06);
+  setTimeout(()=>tone(130,.3,"sawtooth",.05),180);
+
+}
+
+
+/* Win sound */
+
+function winSound(){
+
+  const notes=[
+    523,659,784,1046,1318
+  ];
+
+  notes.forEach((n,i)=>{
+    setTimeout(()=>tone(n,.25),i*130);
+  });
+
+}
+
+
+/* Game over sound */
+
+function loseSound(){
+
+  tone(392,.3);
+  setTimeout(()=>tone(330,.3),250);
+  setTimeout(()=>tone(262,.5),500);
+
+}
+
+
+/* Background music */
+
+function startMusic(){
+
+  if(musicInterval) return;
+
+  let step=0;
+
+  const notes=[
+    261,
+    329,
+    392,
+    329,
+    293,
+    349,
+    440,
+    349
+  ];
+
+  musicInterval=setInterval(()=>{
+
+    if(!audioCtx) return;
+
+    tone(notes[step % notes.length],.18,"triangle",.025);
+
+    step++;
+
+  },450);
+
+}
+
+
+/* =====================================================
+   GAME DATA
+===================================================== */
+
+let player="";
+let lives=5;
+let score=0;
+let timeLeft=30;
+let timerInterval;
+let balloonInterval;
+let currentQuestion;
+let gameRunning=false;
+
+
+/*
+   minutes:
+   00 = o'clock
+   15 = quarter past
+   30 = half past
+   45 = quarter to
+*/
+
+const questions=[
+
+  {
+    text:"quarter past three",
+    hour:3,
+    minute:15
+  },
+
+  {
+    text:"half past six",
+    hour:6,
+    minute:30
+  },
+
+  {
+    text:"quarter to nine",
+    hour:8,
+    minute:45
+  },
+
+  {
+    text:"ten past five",
+    hour:5,
+    minute:10
+  },
+
+  {
+    text:"twenty to seven",
+    hour:6,
+    minute:40
+  },
+
+  {
+    text:"quarter past eight",
+    hour:8,
+    minute:15
+  },
+
+  {
+    text:"half past two",
+    hour:2,
+    minute:30
+  },
+
+  {
+    text:"twenty-five to twelve",
+    hour:11,
+    minute:35
+  },
+
+  {
+    text:"five past four",
+    hour:4,
+    minute:5
+  },
+
+  {
+    text:"quarter to five",
+    hour:4,
+    minute:45
+  },
+
+  {
+    text:"twenty past nine",
+    hour:9,
+    minute:20
+  },
+
+  {
+    text:"ten to eleven",
+    hour:10,
+    minute:50
+  }
+
+];
+
+
+/* =====================================================
+   START
+===================================================== */
+
+function startGame(){
+
+  initAudio();
+
+  player=document.getElementById("playerName").value.trim();
+
+  if(!player){
+    alert("Please enter your name!");
+    return;
+  }
+
+  document.getElementById("startScreen").style.display="none";
+  document.getElementById("game").style.display="block";
+
+  gameRunning=true;
+
+  lives=5;
+  score=0;
+  timeLeft=30;
+
+  updateUI();
+
+  startMusic();
+
+  newQuestion();
+
+  timerInterval=setInterval(()=>{
+
+    if(!gameRunning) return;
+
+    timeLeft--;
+
+    document.getElementById("timer").textContent=timeLeft;
+
+    if(timeLeft<=0){
+
+      loseLife();
+
+    }
+
+  },1000);
+
+}
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+function updateUI(){
+
+  document.getElementById("lives").textContent=lives;
+  document.getElementById("score").textContent=score;
+  document.getElementById("timer").textContent=timeLeft;
+
+}
+
+
+/* =====================================================
+   QUESTIONS
+===================================================== */
+
+function newQuestion(){
+
+  if(!gameRunning) return;
+
+  currentQuestion=
+    questions[Math.floor(Math.random()*questions.length)];
+
+  document.getElementById("question").textContent=
+    "Find: " + currentQuestion.text;
+
+  createBalloons();
+
+}
+
+
+/* =====================================================
+   CLOCK CREATION
+===================================================== */
+
+function createClock(hour,minute){
+
+  const clock=document.createElement("div");
+  clock.className="clock";
+
+  clock.innerHTML=`
+
+    <span class="num n12">12</span>
+    <span class="num n3">3</span>
+    <span class="num n6">6</span>
+    <span class="num n9">9</span>
+
+    <div class="hand hourHand"></div>
+    <div class="hand minuteHand"></div>
+
+    <div class="centerDot"></div>
+
+  `;
+
+  const hourHand=clock.querySelector(".hourHand");
+  const minuteHand=clock.querySelector(".minuteHand");
+
+  const hourAngle=
+    ((hour % 12) * 30) + (minute * .5);
+
+  const minuteAngle=
+    minute * 6;
+
+  hourHand.style.transform=
+    `translateX(-50%) rotate(${hourAngle}deg)`;
+
+  minuteHand.style.transform=
+    `translateX(-50%) rotate(${minuteAngle}deg)`;
+
+  return clock;
+
+}
+
+
+/* =====================================================
+   BALLOONS
+===================================================== */
+
+function createBalloons(){
+
+  const area=document.getElementById("balloonArea");
+
+  area.innerHTML="";
+
+  const correct={
+    hour:currentQuestion.hour,
+    minute:currentQuestion.minute
+  };
+
+  let choices=[
+    correct,
+    randomTime(),
+    randomTime(),
+    randomTime(),
+    randomTime()
+  ];
+
+
+  /* prevent duplicate choices */
+
+  choices=removeDuplicates(choices);
+
+
+  while(choices.length<5){
+
+    const r=randomTime();
+
+    if(!choices.some(x =>
+      x.hour===r.hour &&
+      x.minute===r.minute
+    )){
+      choices.push(r);
+    }
+
+  }
+
+
+  choices.sort(()=>Math.random()-.5);
+
+
+  choices.forEach((time,index)=>{
+
+    const balloon=document.createElement("div");
+
+    balloon.className="balloon";
+
+    const colors=[
+      "#ff6b81",
+      "#4dabf7",
+      "#ffd43b",
+      "#69db7c",
+      "#cc5de8",
+      "#ff922b"
+    ];
+
+    const color=
+      colors[Math.floor(Math.random()*colors.length)];
+
+    balloon.style.background=color;
+    balloon.style.color=color;
+
+    balloon.style.left=
+      (5 + Math.random()*85) + "%";
+
+    balloon.style.animationDuration=
+      (7 + Math.random()*4) + "s";
+
+    balloon.appendChild(
+      createClock(time.hour,time.minute)
+    );
+
+
+    balloon.dataset.hour=time.hour;
+    balloon.dataset.minute=time.minute;
+
+
+    balloon.onclick=()=>{
+
+      if(!gameRunning) return;
+
+      const h=Number(balloon.dataset.hour);
+      const m=Number(balloon.dataset.minute);
+
+      if(
+        h===currentQuestion.hour &&
+        m===currentQuestion.minute
+      ){
+
+        correctAnswer(balloon);
+
+      }else{
+
+        wrongAnswer(balloon);
+
+      }
+
+    };
+
+
+    area.appendChild(balloon);
+
+  });
+
+}
+
+
+/* =====================================================
+   RANDOM TIMES
+===================================================== */
+
+function randomTime(){
+
+  const minutes=[
+    0,5,10,15,20,25,30,35,40,45,50,55
+  ];
+
+  return {
+    hour:Math.floor(Math.random()*12)+1,
+    minute:minutes[Math.floor(Math.random()*minutes.length)]
+  };
+
+}
+
+
+function removeDuplicates(arr){
+
+  const result=[];
+
+  arr.forEach(item=>{
+
+    const exists=result.some(x=>
+      x.hour===item.hour &&
+      x.minute===item.minute
+    );
+
+    if(!exists){
+      result.push(item);
+    }
+
+  });
+
+  return result;
+
+}
+
+
+/* =====================================================
+   CORRECT
+===================================================== */
+
+function correctAnswer(balloon){
+
+  score+=10;
+
+  correctSound();
+
+  flash("correct");
+
+  balloon.classList.add("pop");
+
+  setTimeout(()=>{
+
+    if(!gameRunning) return;
+
+    newQuestion();
+
+  },350);
+
+  updateUI();
+
+}
+
+
+/* =====================================================
+   WRONG
+===================================================== */
+
+function wrongAnswer(balloon){
+
+  wrongSound();
+
+  flash("wrong");
+
+  balloon.classList.add("pop");
+
+  lives--;
+
+  updateUI();
+
+  if(lives<=0){
+
+    gameOver();
+
+  }
+
+}
+
+
+/* =====================================================
+   TIME OUT
+===================================================== */
+
+function loseLife(){
+
+  wrongSound();
+
+  lives--;
+
+  timeLeft=30;
+
+  updateUI();
+
+  if(lives<=0){
+
+    gameOver();
+
+  }else{
+
+    newQuestion();
+
+  }
+
+}
+
+
+/* =====================================================
+   FLASH
+===================================================== */
+
+function flash(type){
+
+  const div=document.createElement("div");
+
+  div.className=
+    type==="correct"
+    ? "correctFlash"
+    : "wrongFlash";
+
+  document.body.appendChild(div);
+
+  setTimeout(()=>div.remove(),350);
+
+}
+
+
+/* =====================================================
+   GAME OVER
+===================================================== */
+
+function gameOver(){
+
+  gameRunning=false;
+
+  clearInterval(timerInterval);
+
+  loseSound();
+
+  document.getElementById("game").style.display="none";
+
+  document.getElementById("endScreen").style.display="flex";
+
+  document.getElementById("endEmoji").textContent="😢";
+
+  document.getElementById("endTitle").textContent=
+    "GAME OVER";
+
+  document.getElementById("endMessage").textContent=
+    "Good try, " + player + "!";
+
+  document.getElementById("finalScore").textContent=
+    score;
+
+}
+
+
+/* =====================================================
+   WIN
+===================================================== */
+
+function checkWin(){
+
+  if(score>=100){
+
+    gameRunning=false;
+
+    clearInterval(timerInterval);
+
+    winSound();
+
+    document.getElementById("game").style.display="none";
+
+    document.getElementById("endScreen").style.display="flex";
+
+    document.getElementById("endEmoji").textContent="🏆";
+
+    document.getElementById("endTitle").textContent=
+      "TIME CHAMPION!";
+
+    document.getElementById("endMessage").textContent=
+      "Excellent work, " + player + "!";
+
+    document.getElementById("finalScore").textContent=
+      score;
+
+  }
+
+}
+
+
+/* Check win whenever score changes */
+
+const oldCorrect=correctAnswer;
+
+
+/*
+   Override correct answer to check winning.
+*/
+
+function correctAnswer(balloon){
+
+  score+=10;
+
+  correctSound();
+
+  flash("correct");
+
+  balloon.classList.add("pop");
+
+  updateUI();
+
+  if(score>=100){
+
+    setTimeout(()=>checkWin(),250);
+    return;
+
+  }
+
+  setTimeout(()=>{
+
+    if(gameRunning){
+      newQuestion();
+    }
+
+  },350);
+
+}
+
+
+/* =====================================================
+   STOP MUSIC WHEN PAGE IS LEFT
+===================================================== */
+
+window.addEventListener("beforeunload",()=>{
+
+  clearInterval(timerInterval);
+  clearInterval(musicInterval);
+
+});
+
+</script>
+
+</body>
+</html>
